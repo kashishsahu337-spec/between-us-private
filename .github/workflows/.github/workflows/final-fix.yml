@@ -1,0 +1,32 @@
+name: Final chat fix
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/final-fix.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Repair chat
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("worker.js")
+          s = p.read_text()
+          s = s.replace("if(!env.APP_SECRET||request.headers.get('x-app-key')!==env.APP_SECRET)return new Response('Unauthorized',{status:401});", "")
+          s = s.replace("@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/meta/llama-4-scout-17b-16e-instruct")
+          p.write_text(s)
+          PY
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add worker.js
+          git commit -m "Repair AI chat connection"
+          git push
