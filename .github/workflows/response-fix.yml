@@ -1,0 +1,27 @@
+name: Fix response
+on: [push]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("worker.js")
+          s=p.read_text()
+          s=s.replace(
+            "return Response.json(data)}\nasync function selfie",
+            "if(data.reply&&typeof data.reply==='object')data=data.reply;return Response.json(data)}\nasync function selfie"
+          )
+          p.write_text(s)
+          PY
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add worker.js
+          git commit -m "Fix AI response display" || true
+          git push
